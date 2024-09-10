@@ -23,30 +23,30 @@ class RobotArm(object):
 
     def __init__(self):
         print("in __init__")
-        self.board = pyfirmata.Arduino('COM8')
+        self.board = pyfirmata.Arduino("COM8")
 
         self.board.servo_config(3, angle=self.base_angle)
-        self.base = self.board.get_pin('d:3:s')
+        self.base = self.board.get_pin("d:3:s")
         self.base.write(self.base_angle)
 
         self.board.servo_config(5, angle=self.shoulder_angle)
-        self.shoulder = self.board.get_pin('d:11:s')
+        self.shoulder = self.board.get_pin("d:11:s")
         self.shoulder.write(self.shoulder_angle)
 
         self.board.servo_config(6, angle=self.elbow_angle)
-        self.elbow = self.board.get_pin('d:10:s')
+        self.elbow = self.board.get_pin("d:10:s")
         self.elbow.write(self.elbow_angle)
 
         self.board.servo_config(9, angle=self.wrist_roll_angle)
-        self.wrist_roll = self.board.get_pin('d:9:s')
+        self.wrist_roll = self.board.get_pin("d:9:s")
         self.wrist_roll.write(self.wrist_roll_angle)
 
         self.board.servo_config(10, angle=self.wrist_pitch_angle)
-        self.wrist_pitch = self.board.get_pin('d:6:s')
+        self.wrist_pitch = self.board.get_pin("d:6:s")
         self.wrist_pitch.write(90.0)
 
         self.board.servo_config(10, angle=self.gripper_angle)
-        self.gripper = self.board.get_pin('d:5:s')
+        self.gripper = self.board.get_pin("d:5:s")
         self.gripper.write(90.0)
 
     def __del__(self):
@@ -133,8 +133,15 @@ class RobotArm(object):
         # self.sweep_wrist_roll(90)
         self.sweep_wrist_pitch(90)
 
-    def goto(self, base_desired, shoulder_desired, elbow_desired, wrist_roll_desired, wrist_pitch_desired,
-             gripper_desired):
+    def goto(
+        self,
+        base_desired,
+        shoulder_desired,
+        elbow_desired,
+        wrist_roll_desired,
+        wrist_pitch_desired,
+        gripper_desired,
+    ):
         self.sweep_base(base_desired)
         self.sweep_shoulder(shoulder_desired)
         self.sweep_elbow(elbow_desired)
@@ -142,10 +149,22 @@ class RobotArm(object):
         self.sweep_wrist_pitch(wrist_pitch_desired)
         self.sweep_gripper(gripper_desired)
 
-        print(str(self.base_angle) + "," + str(self.shoulder_angle) + "," + str(self.elbow_angle) + ', ' +
-              str(self.wrist_roll_angle) + ', ' + str(self.wrist_pitch_angle) + ', ' + str(self.gripper_angle))
+        print(
+            str(self.base_angle)
+            + ","
+            + str(self.shoulder_angle)
+            + ","
+            + str(self.elbow_angle)
+            + ", "
+            + str(self.wrist_roll_angle)
+            + ", "
+            + str(self.wrist_pitch_angle)
+            + ", "
+            + str(self.gripper_angle)
+        )
         time.sleep(0.2)
 
     def grip(self):
         self.sweep_gripper(60.0)
         self.sweep_gripper(0.0)
+

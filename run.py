@@ -1,4 +1,5 @@
 import os
+
 # import math
 import numpy as np
 import cv2
@@ -17,7 +18,7 @@ class VideoStream:
     def __init__(self, resolution=(1280, 720), framerate=30):
         # Initialize the PiCamera and the camera image stream
         self.stream = cv2.VideoCapture(0)
-        ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*'MJPG'))
+        ret = self.stream.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
         ret = self.stream.set(3, resolution[0])
         ret = self.stream.set(4, resolution[1])
 
@@ -53,9 +54,9 @@ class VideoStream:
         self.stopped = True
 
 
-model_name = 'custom_model_lite'
-graph_name = 'detect (4).tflite'
-label_path = 'trash_label_map.txt'
+model_name = "custom_model_lite"
+graph_name = "detect (4).tflite"
+label_path = "trash_label_map.txt"
 confidence = 0.5
 
 imW, imH = 1280, 720
@@ -65,10 +66,10 @@ CWD_PATH = os.getcwd()
 PATH_TO_CKPT = os.path.join(CWD_PATH, model_name, graph_name)
 PATH_TO_LABELS = os.path.join(CWD_PATH, model_name, label_path)
 
-with open(PATH_TO_LABELS, 'r') as f:
+with open(PATH_TO_LABELS, "r") as f:
     labels = [line.strip() for line in f.readlines()]
 
-if labels[0] == '???':
+if labels[0] == "???":
     del labels[0]
 
 interpreter = Interpreter(model_path=PATH_TO_CKPT)
@@ -79,17 +80,17 @@ interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
 
-height = input_details[0]['shape'][1]
-width = input_details[0]['shape'][2]
-float_model = (input_details[0]['dtype'] == np.float32)
+height = input_details[0]["shape"][1]
+width = input_details[0]["shape"][2]
+float_model = input_details[0]["dtype"] == np.float32
 
 input_mean = 127.5
 input_std = 127.5
 
 # Check if your model was made with TF1 or TF2 because output format differs
-output_name = output_details[0]['name']
+output_name = output_details[0]["name"]
 
-if 'StatefulPartitionedCall' in output_name:
+if "StatefulPartitionedCall" in output_name:
     box_index, class_index, score_index = 1, 3, 0
 else:
     box_index, class_index, score_index = 0, 1, 2
@@ -119,13 +120,19 @@ while True:
         input_data = (np.float32(input_data) - input_mean) / input_std
 
     # Perform the detection on the given frame of mage from the video
-    interpreter.set_tensor(input_details[0]['index'], input_data)
+    interpreter.set_tensor(input_details[0]["index"], input_data)
     interpreter.invoke()
 
-    boxes = interpreter.get_tensor(output_details[box_index]['index'])[0]  # class index coordinates of detected
+    boxes = interpreter.get_tensor(output_details[box_index]["index"])[
+        0
+    ]  # class index coordinates of detected
     # objects
-    classes = interpreter.get_tensor(output_details[class_index]['index'])[0]  # confidence of detected objects
-    scores = interpreter.get_tensor(output_details[score_index]['index'])[0]  # boxes of detected objects
+    classes = interpreter.get_tensor(output_details[class_index]["index"])[
+        0
+    ]  # confidence of detected objects
+    scores = interpreter.get_tensor(output_details[score_index]["index"])[
+        0
+    ]  # boxes of detected objects
 
     # cv2.circle(frame, (275, 445), 390, (0, 0, 255), 3, 8, 0)
     # cv2.circle(frame, (275, 445), 365, (0, 0, 255), 3, 8, 0)
@@ -157,28 +164,56 @@ while True:
             cv2.circle(frame, (275, 445), 290, (0, 0, 255), 3, 8, 0)
 
             # Draw label
-            object_name: str = labels[int(classes[i])]  # Look up object name from "labels" array using class index
-            label = '%s: %d%%' % (object_name, int(scores[i] * 100))  # Example: 'person: 72%'
-            labelSize, baseLine = cv2.getTextSize(label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2)  # Get font size
-            label_ymin = max(startY, labelSize[1] + 10)  # Make sure not to draw label too close to top of window
+            object_name: str = labels[
+                int(classes[i])
+            ]  # Look up object name from "labels" array using class index
+            label = "%s: %d%%" % (
+                object_name,
+                int(scores[i] * 100),
+            )  # Example: 'person: 72%'
+            labelSize, baseLine = cv2.getTextSize(
+                label, cv2.FONT_HERSHEY_SIMPLEX, 0.7, 2
+            )  # Get font size
+            label_ymin = max(
+                startY, labelSize[1] + 10
+            )  # Make sure not to draw label too close to top of window
 
-            cv2.rectangle(frame, (startX, label_ymin - labelSize[1] - 10),
-                          (startX + labelSize[0], label_ymin + baseLine - 10), (255, 255, 255),
-                          cv2.FILLED)  # Draw white box to put label text in
-            cv2.putText(frame, label, (startX, label_ymin - 7), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 0, 0),
-                        2)  # Draw label text
+            cv2.rectangle(
+                frame,
+                (startX, label_ymin - labelSize[1] - 10),
+                (startX + labelSize[0], label_ymin + baseLine - 10),
+                (255, 255, 255),
+                cv2.FILLED,
+            )  # Draw white box to put label text in
+            cv2.putText(
+                frame,
+                label,
+                (startX, label_ymin - 7),
+                cv2.FONT_HERSHEY_SIMPLEX,
+                0.7,
+                (0, 0, 0),
+                2,
+            )  # Draw label text
             # engine.say(object_name)
 
     # Calculate the frame rate
     # time = (time.time() - t1)
     # frame_rate = 1 / time
 
-    cv2.putText(frame, 'FPS: {0:.2f}'.format(frame_rate), (30, 50), cv2.FONT_HERSHEY_COMPLEX,
-                1, (255, 101, 40), 3, cv2.LINE_AA)
+    cv2.putText(
+        frame,
+        "FPS: {0:.2f}".format(frame_rate),
+        (30, 50),
+        cv2.FONT_HERSHEY_COMPLEX,
+        1,
+        (255, 101, 40),
+        3,
+        cv2.LINE_AA,
+    )
 
     # Draw all results so that they can be seen on the frame
 
-    cv2.imshow('Waste Detector', frame)
+    cv2.imshow("Waste Detector", frame)
 
     # Calculate the frame rate
     t2 = cv2.getTickCount()
@@ -186,7 +221,7 @@ while True:
     frame_rate = 1 / time
 
     # Quit the whole loop
-    if cv2.waitKey(1) == ord('q'):
+    if cv2.waitKey(1) == ord("q"):
         break
 
 # engine.runAndWait()
